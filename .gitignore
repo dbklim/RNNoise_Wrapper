@@ -1,0 +1,8 @@
+.vscode/
+__pycache__/
+dist/
+env_*/
+*.egg-info/
+*.wav
+!test_audio/*.wav
+*\[backup\]*
