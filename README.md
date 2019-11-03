@@ -40,14 +40,13 @@ cd RNNoise_Wrapper
 from rnnoise_wrapper import RNNoise
 
 denoiser = RNNoise()
+
 audio = denoiser.read_wav('test.wav')
 filtered_audio = denoiser.filter(audio)
-
-f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised.wav'
-denoiser.write_wav(f_name_denoised_audio, filtered_audio)
+denoiser.write_wav('test_denoised.wav', filtered_audio)
 ```
 
-Подавление шума в потоковом аудио (размер буфера равен 10 миллисекунд, т.е. 1 фрейм) (в примере используется имитация потока путём обработки аудиозаписи `test.wav` по частям с сохранением результата как `test_denoised.wav`):
+Подавление шума в потоковом аудио (размер буфера равен 10 миллисекунд, т.е. 1 фрейм) (в примере используется имитация потока путём обработки аудиозаписи `test.wav` по частям с сохранением результата как `test_denoised_f.wav`):
 ```python
 audio = denoiser.read_wav('test.wav')
 
@@ -59,18 +58,17 @@ for i in range(buffer_size_ms, len(audio), buffer_size_ms):
 if len(audio) % buffer_size_ms != 0:
     filtered_audio += denoiser.filter(audio[len(audio)-(len(audio)%buffer_size_ms):].raw_data, sample_rate=audio.frame_rate)
 
-f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised_f.wav'
-denoiser.write_wav(f_name_denoised_audio, filtered_audio, sample_rate=audio.frame_rate)
+denoiser.write_wav('test_denoised_f.wav', filtered_audio, sample_rate=audio.frame_rate)
 ```
 
 Больше примеров работы с обёрткой можно найти [тут](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L331).
 
 Класс [RNNoise](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L30) содержит следующие методы:
 
-- [`read_wav()`](https://github.com/Desklop/WebRTCVAD_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L263): принимает имя .wav аудиозаписи, приводит её в поддерживаемый формат (16 бит, моно) и возвращает объект `pydub.AudioSegment` с аудиозаписью
-- [`write_wav()`](https://github.com/Desklop/WebRTCVAD_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L284): принимает имя .wav аудиозаписи, объект `pydub.AudioSegment` (или байтовую строку с аудиоданными без заголовков wav) и сохраняет аудиозапись под переданным именем
-- [`filter()`](https://github.com/Desklop/WebRTCVAD_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L157): принимает объект `pydub.AudioSegment` (или байтовую строку с аудиоданными без заголовков wav), приводит его к частоте дискретизации 48000 Гц, разбивает аудиозапись на фреймы (длиной 10 миллисекунд), очищает их от шума и возвращает объект `pydub.AudioSegment` (или байтовую строку без заголовков wav) с исходной частотой дискретизации
-- [`filter_frame()`](https://github.com/Desklop/WebRTCVAD_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L135): очистка только одного фрейма (длиной 10 мс, 16 бит, моно, 48000 Гц) от шума (обращение напрямую к бинарному файлу библиотеки RNNoise)
+- [`read_wav()`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L263): принимает имя .wav аудиозаписи, приводит её в поддерживаемый формат (16 бит, моно) и возвращает объект `pydub.AudioSegment` с аудиозаписью
+- [`write_wav()`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L284): принимает имя .wav аудиозаписи, объект `pydub.AudioSegment` (или байтовую строку с аудиоданными без заголовков wav) и сохраняет аудиозапись под переданным именем
+- [`filter()`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L157): принимает объект `pydub.AudioSegment` (или байтовую строку с аудиоданными без заголовков wav), приводит его к частоте дискретизации 48000 Гц, разбивает аудиозапись на фреймы (длиной 10 миллисекунд), очищает их от шума и возвращает объект `pydub.AudioSegment` (или байтовую строку без заголовков wav) с сохранением исходной частоты дискретизации
+- [`filter_frame()`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L135): очистка только одного фрейма (длиной 10 мс, 16 бит, моно, 48000 Гц) от шума (обращение напрямую к бинарному файлу библиотеки RNNoise)
 
 При создании объекта класса `RNNoise` из обёртки можно передать путь к скомпилированному бинарному файлу библиотеки RNNoise, который необходимо использовать:
 ```python
