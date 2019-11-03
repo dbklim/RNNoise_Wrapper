@@ -1,3 +1,5 @@
+This is a copy of official RNNoise repository (https://github.com/xiph/rnnoise) dated 03.11.2019.
+
 RNNoise is a noise suppression library based on a recurrent neural network.
 
 To compile, just type:
