@@ -19,8 +19,8 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'),
 
 
 install_requires = [
-    'pydub>=0.23',
-    'numpy>=1.16'
+    'pydub>=0.2',
+    'numpy>=1.1'
 ]
 
 
