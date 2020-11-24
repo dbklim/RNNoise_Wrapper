@@ -1,0 +1,4 @@
+env_*/
+datasets/
+*.f32
+*.h5

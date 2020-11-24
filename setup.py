@@ -7,21 +7,21 @@
 #     DATE : 14.10.2019
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-import os
 from setuptools import setup, find_packages
+from typing import List
 
 
-__version__ = 1.0
+__version__ = 1.1
 
 
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+def readme() -> List[str]:
+    with open('README.md', 'r', encoding='utf-8') as f_readme:
+        return f_readme.read()
 
 
-install_requires = [
-    'pydub>=0.2',
-    'numpy>=1.1'
-]
+def requirements() -> List[str]:
+    with open('requirements.txt', 'r', encoding='utf-8') as f_requirements:
+        return f_requirements.read()
 
 
 setup(
@@ -30,7 +30,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts':
-            ['rnnoise_wrapper = rnnoise_wrapper.cli:cli']
+            ['rnnoise_wrapper = rnnoise_wrapper.cli:denoise']
         },
     classifiers=[
         'Intended Audience :: Developers',
@@ -39,12 +39,13 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries',
     ],
     version=__version__,
-    install_requires=install_requires,
-    description='WebRTCVAD-Wrapper is a simple wrapper to audio noise reduction RNNoise',
-    long_description=long_description,
+    install_requires=requirements(),
+    description='RNNoise_Wrapper is a simple wrapper to audio noise reduction RNNoise',
+    long_description=readme(),
     long_description_content_type='text/markdown',
     author='Vlad Klim',
     author_email='valdsklim@gmail.com',
@@ -57,7 +58,7 @@ setup(
 )
 
 
-print('\nRNNoise-Wrapper is ready for work and defense!')
-print('All information about the module is available at https://github.com/Desklop/RNNoise_Wrapper')
+print('\nRNNoise_Wrapper is ready for work and defense!')
+print('All information about this package is available at https://github.com/Desklop/RNNoise_Wrapper')
 
-# To build package run: python3 setup.py sdist
+# To build package run: python3 setup.py sdist bdist_wheel

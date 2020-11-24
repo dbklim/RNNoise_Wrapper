@@ -1,2 +1,2 @@
-include LICENSE README.md
+include LICENSE README.md TRAINING.md
 recursive-include rnnoise_wrapper/ *

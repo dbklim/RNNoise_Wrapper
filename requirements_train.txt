@@ -1,0 +1,5 @@
+tensorflow==1.15.4
+#tensorflow-gpu==1.15.4
+keras==2.3.1
+h5py==2.10.0
+pydub==0.24.1
