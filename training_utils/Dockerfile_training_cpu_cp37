@@ -1,0 +1,49 @@
+FROM ubuntu:19.10
+LABEL maintainer="Vlad Klim, vladsklim@gmail.com"
+
+# Установка необходимых пакетов для Ubuntu
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y && \
+    apt-get install -y python3.7 python3.7-dev python3-pip tzdata locales expect git wget unzip autoconf libtool
+
+# Установка часового пояса
+ENV TZ=Europe/Minsk
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+# Копирование необходимых файлов
+COPY . /RNNoise_training
+WORKDIR /RNNoise_training
+
+# Обновление pip для Python3 и установка необходимых пакетов
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py --force-reinstall && \
+    rm get-pip.py && \
+    pip3 install --no-cache-dir tensorflow_cpu_SSE4.1_SSE4.2_XLA-1.15.2-cp37-cp37m-linux_x86_64.whl keras==2.3.1 h5py==2.10.0 pydub==0.23.1
+
+# Изменение локализации для корректного вывода кириллицы в терминале
+RUN locale-gen ru_RU.UTF-8
+ENV LANG=ru_RU.UTF-8 \
+    LANGUAGE=ru_RU:ru \
+    LC_ALL=ru_RU.UTF-8
+
+# Очистка кеша
+RUN apt-get -y autoremove && \
+    apt-get -y autoclean && \
+    apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/*
+
+CMD ["/bin/bash"]
+
+# Сборка образа:
+# sudo docker build -f Dockerfile_training_cpu_cp37 -t rnnoise_training_cpu:1.0 .
+
+# Запуск контейнера:
+# sudo docker run -ti --rm -v "/storage/RNNoise:/RNNoise_training" rnnoise_training_cpu:1.0 python3 training/rnn_train.py
+
+# Запуск контейнера без подключения к нему (в фоне):
+# sudo docker run -d --name rnnoise_training -ti --rm -v "/storage/RNNoise:/RNNoise_training" rnnoise_training_cpu:1.0 python3 training/rnn_train.py
+
+# Подключение к запущенному контейнеру (для отключения без остановки контейнера использовать Ctrl+P или Ctrl+Q):
+# sudo docker attach rnnoise_training
