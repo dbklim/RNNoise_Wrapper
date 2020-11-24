@@ -5,6 +5,7 @@ build/
 *.egg-info/
 
 datasets/
+test_audio/source
 test_audio/*h*k/
 test_audio/comparative_tests/test_*
 train_logs/training_set*
