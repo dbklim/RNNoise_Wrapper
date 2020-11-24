@@ -84,7 +84,7 @@ if len(audio) % buffer_size_ms != 0:
 denoiser.write_wav('test_denoised_stream.wav', denoised_audio, sample_rate=audio.frame_rate)
 ```
 
-**Больше примеров работы с обёрткой** можно найти в [`rnnoise_wrapper_functional_tests.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper_functional_tests.py) и [`rnnoise_wrapper_comparative_test.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper_comparative_test.py).
+**Больше примеров работы с обёрткой** можно найти в [`rnnoise_wrapper_functional_tests.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper_functional_tests.py) и [`rnnoise_wrapper_comparative_test.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper_comparative_test.py).
 
 Класс [RNNoise](https://github.com/Desklop/RNNoise_Wrapper/blob/master/rnnoise_wrapper/rnnoise_wrapper.py#L29) содержит следующие методы:
 
