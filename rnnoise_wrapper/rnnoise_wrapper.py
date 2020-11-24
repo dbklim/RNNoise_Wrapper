@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#       OS : GNU/Linux Ubuntu 16.04 or 18.04
+#       OS : GNU/Linux Ubuntu 16.04 or later
 # LANGUAGE : Python 3.5.2 or later
 #   AUTHOR : Klim V. O.
-#     DATE : 18.10.2019
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 '''
@@ -24,7 +23,7 @@ import numpy as np
 from pydub import AudioSegment
 
 
-__version__ = 1.0
+__version__ = 1.1
 
 
 class RNNoise(object):
@@ -35,19 +34,21 @@ class RNNoise(object):
     - filter_frame(): очистка только одного фрейма от шума (обращение напрямую к бинарнику RNNoise)
     - reset(): пересоздать объект RNNoise из библиотеки для сброса состояния нейронной сети
 
-    1. path_to_lib - путь к библиотеке, если None и:
-            - тип используемой ОС linux или mac (darwin) - использовать librnnoise.so.0.4.1 из файлов пакета
-            - тип используемой ОС windows или другое - выполнить поиск в текущей папке и её подпапках файла с префиксом 'librnnoise.'
-        если является путём к библиотеке/именем библиотеки - проверить существование переданного пути и:
-            - путь существует - загрузить библиотеку
-            - путь не существует - выполнить поиск в текущей папке и её подпапках файла/пути, используя переданное значение в качестве префикса '''
+    1. f_name_lib - путь к библиотеке, если None и:
+            - тип используемой ОС linux или mac (darwin) - использовать librnnoise_5h_b_500k.so.0.4.1 из файлов пакета
+            - тип используемой ОС windows или другое - выполнить поиск в текущей папке и её подпапках файла с префиксом 'librnnoise'
+        если является путём к библиотеке/именем библиотеки - проверить существование переданного пути/имени библиотеки и если:
+            - путь/имя существует - вернуть абсолютный путь
+            - путь/имя не существует - выполнить поиск в текущей папке и её подпапках файла/пути, используя переданное значение в качестве субимени'''
+
     sample_width = 2
     channels = 1
     sample_rate = 48000
     frame_duration_ms = 10
-    def __init__(self, path_to_lib=None):
-        path_to_lib = self.__get_path_to_lib(path_to_lib)
-        self.rnnoise_lib = ctypes.cdll.LoadLibrary(path_to_lib)
+
+    def __init__(self, f_name_lib=None):
+        f_name_lib = self.__get_f_name_lib(f_name_lib)
+        self.rnnoise_lib = ctypes.cdll.LoadLibrary(f_name_lib)
 
         self.rnnoise_lib.rnnoise_process_frame.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
         self.rnnoise_lib.rnnoise_process_frame.restype = ctypes.c_float
@@ -57,68 +58,60 @@ class RNNoise(object):
         self.rnnoise_obj = self.rnnoise_lib.rnnoise_create(None)
 
 
-    def __get_path_to_lib(self, path_to_lib=None):
+    def __get_f_name_lib(self, f_name_lib=None):
         ''' Найти и/или проверить путь к скомпилированной библиотеке RNNoise.
 
-        1. path_to_lib - путь к библиотеке, если None и:
-                - тип используемой ОС linux или mac (darwin) - использовать librnnoise.so.0.4.1 из файлов пакета
-                - тип используемой ОС windows или другое - выполнить поиск в текущей папке и её подпапках файла с префиксом 'librnnoise.'
-            если является путём к библиотеке/именем библиотеки - проверить существование переданного пути и если:
-                - путь существует - вернуть его
-                - путь не существует - выполнить поиск в текущей папке и её подпапках файла/пути, используя переданное значение в качестве префикса
-        2. возвращает path_to_lib с проверенным путём к найденной библиотеке '''
+        1. f_name_lib - путь к библиотеке, если None и:
+                - тип используемой ОС linux или mac (darwin) - использовать librnnoise_5h_b_500k.so.0.4.1 из файлов пакета
+                - тип используемой ОС windows или другое - выполнить поиск в текущей папке и её подпапках файла с префиксом 'librnnoise'
+            если является путём к библиотеке/именем библиотеки - проверить существование переданного пути/имени библиотеки и если:
+                - путь/имя существует - вернуть абсолютный путь
+                - путь/имя не существует - выполнить поиск в текущей папке и её подпапках файла/пути, используя переданное значение в качестве субимени
+        2. возвращает f_name_lib с проверенным абсолютным путём к найденной библиотеке '''
 
-        if path_to_lib is None:
-            lib_name = 'librnnoise.'
+        package_name = __file__
+        package_name = package_name[package_name.rfind('/')+1:package_name.rfind('.py')]
+
+        if not f_name_lib:
+            subname = 'librnnoise'
             system = platform.system()
             if system == 'Linux' or system == 'Darwin':
-                package_name = __file__
-                package_name = package_name[package_name.rfind('/')+1:package_name.rfind('.py')]
-                found_path_to_lib = pkg_resources.resource_filename(package_name, 'libs/'+lib_name+'so.0.4.1')
-                if not os.path.exists(found_path_to_lib):
-                    found_path_to_lib = self.__find_lib(lib_name)
+                found_f_name_lib = pkg_resources.resource_filename(package_name, 'libs/{}_5h_b_500k.so.0.4.1'.format(subname))
+                if not os.path.exists(found_f_name_lib):
+                    found_f_name_lib = self.__find_lib(subname)
             else:
-                found_path_to_lib = self.__find_lib(lib_name)
+                found_f_name_lib = self.__find_lib(subname)
             
-            if found_path_to_lib is None:
-                error_message = 'не удалось найти бинарный файл библиотеки RNNoise. Возможные причины:\n' + \
-                                "\t1. Если вы используете Windows и имя бинарного файла не задано, а файл с префиксом 'librnnoise.' не найден " + \
-                                'в той же папке (или любой её подпапке), в которой находится скрипт, использующий данный пакет\n' + \
-                                "\t2. Вы используете Linux или MacOS и бинарный файл из файлов пакета недоступен, а файл с префиксом 'librnnoise.' " + \
-                                'не найден в той же папке (или любой её подпапке), в которой находится скрипт, использующий данный пакет\n' + \
-                                'Вероятно, вручную скомпилировать RNNoise и явно указать путь к бинарному файлу поможет решить проблему, см. ' + \
-                                'https://github.com/Desklop/RNNoise_Wrapper'
-                raise NameError(error_message)
+            if not found_f_name_lib:
+                raise NameError("could not find RNNoise library with subname '{}'".format(subname))
+
         else:
-            found_path_to_lib = self.__find_lib(path_to_lib)
-            if found_path_to_lib is None:
-                raise NameError("не удалось найти бинарный файл библиотеки RNNoise с именем/префиксом '%s'" % path_to_lib)
+            f_names_available_libs = pkg_resources.resource_listdir(package_name, 'libs/')
+            for available_lib in f_names_available_libs:
+                if available_lib.find(f_name_lib) != -1:
+                    f_name_lib = pkg_resources.resource_filename(package_name, 'libs/{}'.format(available_lib))
 
-        return found_path_to_lib
+            found_f_name_lib = self.__find_lib(f_name_lib)
+            if not found_f_name_lib:
+                raise NameError("could not find RNNoise library with name/subname '{}'".format(f_name_lib))
+
+        return found_f_name_lib
 
 
-    def __find_lib(self, lib_name, start_path='.'):
-        ''' Выполнить рекурсивный поиск файла lib_name в папке start_path и всех его подпапках.
-        1. lib_name - имя искомого файла или его префикс (часть имени, позволяющая однозначно идентифицировать файл)
-        2. start_path - корневая папка, из которой начинать поиск
+    def __find_lib(self, f_name_lib, root_folder='.'):
+        ''' Выполнить рекурсивный поиск файла f_name_lib в папке root_folder и всех её подпапках.
+        1. f_name_lib - имя искомого файла или его субимя (часть имени, позволяющая однозначно идентифицировать файл)
+        2. root_folder - корневая папка, из которой начинать поиск
         3. возвращает найденный существующий путь или None '''
 
-        if os.path.isfile(lib_name) and os.path.exists(lib_name):
-            return lib_name
+        f_name_lib_full = os.path.abspath(f_name_lib)
+        if os.path.isfile(f_name_lib_full) and os.path.exists(f_name_lib_full):
+            return f_name_lib_full
 
-        start_path += '/'
-        files_and_dirs = os.listdir(start_path)
-        files = [file_or_dir for file_or_dir in files_and_dirs if os.path.isfile(start_path+file_or_dir)]
-        dirs = [file_or_dir for file_or_dir in files_and_dirs if os.path.isdir(start_path+file_or_dir)]
-
-        for one_file in files:
-            if one_file.rfind(lib_name) != -1:
-                return start_path + one_file
-        
-        for one_dir in dirs:
-            lib_path = self.__find_lib(lib_name, start_path+one_dir)
-            if lib_path is not None:
-                return lib_path
+        for path, folder_names, f_names in os.walk(root_folder):
+            for f_name in f_names:
+                if f_name.rfind(f_name_lib) != -1:
+                    return os.path.join(path, f_name)
 
 
     def reset(self):
@@ -214,7 +207,7 @@ class RNNoise(object):
 
         denoised_audio = AudioSegment(data=denoised_audio_bytes, sample_width=self.sample_width, frame_rate=self.sample_rate, channels=self.channels)
 
-        if sample_rate is not None:
+        if sample_rate:
             denoised_audio = denoised_audio.set_frame_rate(sample_rate)
         return denoised_audio
 
@@ -236,8 +229,8 @@ class RNNoise(object):
                 audio = audio.set_frame_rate(self.sample_rate)
             audio_bytes = audio.raw_data
         elif isinstance(audio, bytes):
-            if sample_rate is None:
-                raise ValueError("когда type(audio) == bytes, 'sample_rate' не может быть None")
+            if not sample_rate:
+                raise ValueError("when type(audio) = 'bytes', 'sample_rate' can not be None")
             audio_bytes = audio
             source_sample_rate = sample_rate
             if sample_rate != self.sample_rate:
@@ -245,7 +238,7 @@ class RNNoise(object):
                 audio = audio.set_frame_rate(self.sample_rate)
                 audio_bytes = audio.raw_data
         else:
-            raise TypeError("'audio' может быть только AudioSegment или bytes")
+            raise TypeError("'audio' can only be AudioSegment or bytes")
 
         frame_width = int(self.sample_rate * (self.frame_duration_ms / 1000.0) * 2)
         if len(audio_bytes) % frame_width != 0:
@@ -268,11 +261,11 @@ class RNNoise(object):
         3. возвращает объект pydub.AudioSegment с аудиозаписью '''
 
         if isinstance(f_name_wav, str) and f_name_wav.rfind('.wav') == -1:
-            raise ValueError("'f_name_wav' должна содержать имя .wav аудиозаписи")
+            raise ValueError("'f_name_wav' must contain the name .wav audio recording")
 
         audio = AudioSegment.from_wav(f_name_wav)
 
-        if sample_rate is not None:
+        if sample_rate:
             audio = audio.set_frame_rate(sample_rate)
         if audio.sample_width != self.sample_width:
             audio = audio.set_sample_width(self.sample_width)
@@ -284,7 +277,7 @@ class RNNoise(object):
     def write_wav(self, f_name_wav, audio_data, sample_rate=None):
         ''' Сохранить .wav аудиозапись.
         1. f_name_wav - имя .wav аудиозаписи, в который будет сохранена аудиозапись или BytesIO
-        2. audio_data - объект pydub.AudioSegment с аудиозаписью или байтовая строка с аудиоданными (без заголовков wav)
+        2. audio_data - объект pydub.AudioSegment с аудиозаписью или байтовая строка с аудиоданными (без заголовка wav)
         3. sample_rate - частота дискретизации аудиозаписи:
             когда audio_data - байтовая строка, должна соответствовать реальной частоте дискретизации аудиозаписи
             в остальных случаях частота дискретизации будет приведена к указанной (если None - не менять частоту дискретизации) '''
@@ -292,13 +285,13 @@ class RNNoise(object):
         if isinstance(audio_data, AudioSegment):
             self.write_wav_from_audiosegment(f_name_wav, audio_data, sample_rate)
         elif isinstance(audio_data, bytes):
-            if sample_rate is None:
-                raise ValueError("когда type(audio_data) = bytes, 'sample_rate' не может быть None")
+            if not sample_rate:
+                raise ValueError("when type(audio_data) = 'bytes', 'sample_rate' can not be None")
             self.write_wav_from_bytes(f_name_wav, audio_data, sample_rate)
         else:
-            raise TypeError("'audio_data' имеет неподдерживаемый тип. Поддерживаются:\n" + \
-                            "\t- объект pydub.AudioSegment с аудиозаписью\n" + \
-                            "\t- байтовая строка с аудиозаписью")
+            raise TypeError("'audio_data' is of an unsupported type. Supported:\n" + \
+                            "\t- pydub.AudioSegment with audio\n" + \
+                            "\t- byte string with audio data (without wav header)")
 
 
     def write_wav_from_audiosegment(self, f_name_wav, audio, desired_sample_rate=None):
@@ -307,7 +300,7 @@ class RNNoise(object):
         2. audio - объект pydub.AudioSegment с аудиозаписью
         3. desired_sample_rate - желаемая частота дискретизации (если None - не менять частоту дискретизации) '''
 
-        if desired_sample_rate is not None:
+        if desired_sample_rate:
             audio = audio.set_frame_rate(desired_sample_rate)
         audio.export(f_name_wav, format='wav')
 
@@ -320,7 +313,7 @@ class RNNoise(object):
         4. desired_sample_rate - желаемая частота дискретизации (если None - не менять частоту дискретизации) '''
 
         audio = AudioSegment(data=audio_bytes, sample_width=self.sample_width, frame_rate=sample_rate, channels=self.channels)
-        if desired_sample_rate is not None and desired_sample_rate != sample_rate:
+        if desired_sample_rate and desired_sample_rate != sample_rate:
             audio = audio.set_frame_rate(desired_sample_rate)
 
         audio.export(f_name_wav, format='wav')
@@ -329,66 +322,87 @@ class RNNoise(object):
 
 
 def main():
-    # Сильно ускорить работу данной обёртки в принципе не представляется возможным, т.к. примерно 85-90% всего времени работы
-    # приходится на бинарный файл библиотеки RNNoise. Можно ускорить на эти 10-15%, но разница будет заметна только на длинных
-    # аудиозаписях (от 60 и более секунд, чем длиннее - тем больше разница).
-    #lib_path = 'rnnoise_wrapper/libs/librnnoise.so.0.4.1'
-    denoiser = RNNoise()
+    folder_name_with_audio = 'test_audio/functional_tests'
+    f_name_rnnoise_binary = 'librnnoise_default.so.0.4.1'
+
+    denoiser = RNNoise(f_name_rnnoise_binary)
+
+    # Search audio recordings for test
+    all_objects = os.listdir(folder_name_with_audio)
+    f_names_source_audio = []
+    for one_object in all_objects:
+        if os.path.isfile(os.path.join(folder_name_with_audio, one_object)) and one_object.rfind('.wav') != -1 \
+                                                                            and one_object.rfind('denoised') == -1:
+            f_names_source_audio.append(os.path.join(folder_name_with_audio, one_object))
+    f_names_source_audio = sorted(f_names_source_audio, key=lambda f_name: int(f_name[f_name.rfind('_')+1:f_name.rfind('.')]))
 
 
-    # Пример работы с аудио в виде байтовой строки без заголовков
-    f_name_audio = 'test_audio/test_1.wav'
+    # Test for working with audio as a byte string without headers
+    f_name_audio = f_names_source_audio[0]
     audio = denoiser.read_wav(f_name_audio)
 
     start_time = time.time()
-    filtered_audio = denoiser.filter(audio.raw_data, sample_rate=audio.frame_rate)
-    work_time = time.time() - start_time
+    denoised_audio = denoiser.filter(audio.raw_data, sample_rate=audio.frame_rate)
+    elapsed_time = time.time() - start_time
 
     f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised.wav'
-    denoiser.write_wav(f_name_denoised_audio, filtered_audio, sample_rate=audio.frame_rate)
-    print('Audio: %s\nLength audio: %.4f s\nDenoised audio: %s\nWork time: %.4f s' % (f_name_audio, len(audio)/1000, f_name_denoised_audio, work_time))
+    denoiser.write_wav(f_name_denoised_audio, denoised_audio, sample_rate=audio.frame_rate)
 
-    denoiser.reset()  # не обязательно, необходимость ещё не доказана
-
-
-    # Пример работы с аудио в виде pydub.AudioSegment (предпочитаемый вариант использования)
-    for i in range(2, 6):
-        f_name_audio = 'test_audio/test_%i.wav' % i
-        audio = denoiser.read_wav(f_name_audio)
-        
-        start_time = time.time()
-        filtered_audio = denoiser.filter(audio)
-        work_time = time.time() - start_time
-
-        f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised.wav'
-        denoiser.write_wav(f_name_denoised_audio, filtered_audio)
-        print('\nAudio: %s\nLength audio: %.4f s\nDenoised audio: %s\nWork time: %.4f s' % (f_name_audio, len(audio)/1000, f_name_denoised_audio, work_time))
+    print("Audio: '{}', length: {:.2f} s:".format(f_name_audio, len(audio)/1000))
+    print("\tdenoised audio    '{}'".format(f_name_denoised_audio))
+    print('\tprocessing time   {:.2f} s'.format(elapsed_time))
+    print('\tprocessing speed  {:.1f} RT'.format(len(audio)/1000/elapsed_time))
 
 
-    # Пример работы с потоковым аудио (размер буфера 10 мс, т.е. размером 1 фрейм) - т.е. обработка аудиозаписи по n миллисекунд
-    f_name_audio = 'test_audio/test_1.wav'
+    denoiser.reset()  # not necessarily, need has not yet been proven
+
+
+    # Test for working with streaming audio (buffer size 10 ms = 1 frame) - processing audio recording for 10 milliseconds
+    f_name_audio = f_names_source_audio[0]
     audio = denoiser.read_wav(f_name_audio)
 
-    filtered_audio = b''
+    denoised_audio = b''
     buffer_size_ms = 10
 
     start_time = time.time()
-    average_work_time_per_frame = []
+    elapsed_time_per_frame = []
     for i in range(buffer_size_ms, len(audio), buffer_size_ms):
         time_per_frame = time.time()
-        filtered_audio += denoiser.filter(audio[i-buffer_size_ms:i].raw_data, sample_rate=audio.frame_rate)
-        average_work_time_per_frame.append(time.time() - time_per_frame)
+        denoised_audio += denoiser.filter(audio[i-buffer_size_ms:i].raw_data, sample_rate=audio.frame_rate)
+        elapsed_time_per_frame.append(time.time() - time_per_frame)
     if len(audio) % buffer_size_ms != 0:
         time_per_frame = time.time()
-        filtered_audio += denoiser.filter(audio[len(audio)-(len(audio)%buffer_size_ms):].raw_data, sample_rate=audio.frame_rate)
-        average_work_time_per_frame.append(time.time() - time_per_frame)
-    work_time = time.time() - start_time
-    average_work_time = sum(average_work_time_per_frame) / len(average_work_time_per_frame)
+        denoised_audio += denoiser.filter(audio[len(audio)-(len(audio)%buffer_size_ms):].raw_data, sample_rate=audio.frame_rate)
+        elapsed_time_per_frame.append(time.time() - time_per_frame)
+    elapsed_time = time.time() - start_time
+    average_elapsed_time_per_frame = sum(elapsed_time_per_frame) / len(elapsed_time_per_frame)
 
-    f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised_f.wav'
-    denoiser.write_wav(f_name_denoised_audio, filtered_audio, sample_rate=audio.frame_rate)
-    print('\nAudio: %s\nLength audio: %.4f s\nDenoised audio: %s\nTotal work time (by frames): %.4f s\nAverage work time (per 1 frame): %.6f s'
-          % (f_name_audio, len(audio)/1000, f_name_denoised_audio, work_time, average_work_time))
+    f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised_stream.wav'
+    denoiser.write_wav(f_name_denoised_audio, denoised_audio, sample_rate=audio.frame_rate)
+    
+    print("\nAudio: '{}', length: {:.2f} s:".format(f_name_audio, len(audio)/1000))
+    print("\tdenoised audio                                '{}'".format(f_name_denoised_audio))
+    print('\tprocessing time                               {:.2f} s'.format(elapsed_time))
+    print('\taverage processing time of 1 buffer ({} ms)   {:.2f} ms'.format(buffer_size_ms, average_elapsed_time_per_frame*1000))
+    print('\tprocessing speed                              {:.1f} RT'.format(len(audio)/1000/elapsed_time))
+    print('\taverage processing speed of 1 buffer ({} ms)  {:.1f} RT'.format(buffer_size_ms, buffer_size_ms/(average_elapsed_time_per_frame*1000)))
+
+
+    # Test for working with audio in the form of pydub.AudioSegment
+    for f_name_audio in f_names_source_audio[1:6]:
+        audio = denoiser.read_wav(f_name_audio)
+
+        start_time = time.time()
+        denoised_audio = denoiser.filter(audio)
+        elapsed_time = time.time() - start_time
+
+        f_name_denoised_audio = f_name_audio[:f_name_audio.rfind('.wav')] + '_denoised.wav'
+        denoiser.write_wav(f_name_denoised_audio, denoised_audio)
+
+        print("\nAudio: '{}', length: {:.2f} s:".format(f_name_audio, len(audio)/1000))
+        print("\tdenoised audio    '{}'".format(f_name_denoised_audio))
+        print('\tprocessing time   {:.2f} s'.format(elapsed_time))
+        print('\tprocessing speed  {:.1f} RT'.format(len(audio)/1000/elapsed_time))
 
 
 if __name__ == '__main__':
