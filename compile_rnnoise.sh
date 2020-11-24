@@ -1,19 +1,20 @@
 #!/bin/bash
 
-SOURCE_DIRECTORY='rnnoise_source'
+ZIP_RNNOISE_SOURCE="rnnoise_master_20.11.2020.zip"
 
-if ! [ -d rnnoise_source ]; then
-echo "[E] Directory '$SOURCE_DIRECTORY' not found"
-exit 1
+if [ ! -f $ZIP_RNNOISE_SOURCE ]; then
+    echo -e "\n[E] Archive ${ZIP_RNNOISE_SOURCE} not found\n"
+    exit 1
 fi
 
-cd $SOURCE_DIRECTORY
+unzip $ZIP_RNNOISE_SOURCE
+cd rnnoise-master
 ./autogen.sh
 ./configure
 make
 cd -
 mkdir -p rnnoise_wrapper/libs
-mv $SOURCE_DIRECTORY/.libs/librnnoise.so.0.* rnnoise_wrapper/libs
-rm -rf $SOURCE_DIRECTORY
+mv rnnoise-master/.libs/librnnoise.so.0.4.1 rnnoise_wrapper/libs/librnnoise_default.so.0.4.1
+rm -rf rnnoise-master
 
-echo -e "\n'librnnoise.so.0.*' files has been successfully moved to 'rnnoise_wrapper/libs'"
+echo -e "\n'librnnoise.so.0.4.1' has been successfully moved to 'rnnoise_wrapper/libs/librnnoise_default.so.0.4.1'"
