@@ -56,7 +56,9 @@ cd RNNoise_Wrapper
 
 ## Использование
 
-**1. В коде Python** (подавление шума в аудиозаписи `test.wav` и сохранение результата как `test_denoised.wav`):
+### **1. В коде Python**
+
+Подавление шума в аудиозаписи `test.wav` и сохранение результата как `test_denoised.wav`:
 
 ```python
 from rnnoise_wrapper import RNNoise
@@ -114,7 +116,7 @@ denoiser_new = RNNoise(f_name_lib='path/to/librnnoise.so.0.4.1')
 
 ---
 
-**2. В качестве инструмента командной строки:**
+### **2. В качестве инструмента командной строки**
 
 ```bash
 python3 -m rnnoise_wrapper.cli -i input.wav -o output.wav
