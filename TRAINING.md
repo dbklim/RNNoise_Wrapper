@@ -40,7 +40,13 @@ python3 balance_dns_challenge_dataset.py -rf datasets/clean -sf russian_speech,r
 
 **ВАЖНО!** Примечание 2 и примечание 3 **взаимоисключающие**. Что бы не возникло проблем, **рекомендуется использовать только примечание 3.**
 
-**После подготовки данных рекомендуется скопировать их в папку `RNNoise_Wrapper/datasets`.** Для удобства, датасету присвоено **имя `test_training_set`**, то есть полный путь к датасету будет `RNNoise_Wrapper/datasets/test_training_set`.
+**Подготовленный датасет состоит из 3 папок:**
+
+- `clean` — аудиозаписи с чистой речью, каждая длиной 30 секнуд
+- `noise` — аудиозаписи с шумами, каждая длиной 30 секунд
+- `noisy` — аудиозаписи с зашумленной речью (наложенными шумами из `noise` на речь из `clean`), каждая также длиной 30 секунд
+
+Для обучения RNNoise требуются только папки `clean` и `noise`. **Рекомендуется скопировать их в `RNNoise_Wrapper/datasets`.** Для удобства, датасету присвоено **имя `test_training_set`**, то есть полный путь к датасету будет `RNNoise_Wrapper/datasets/test_training_set`.
 
 ### **2. Подготовка окружения для RNNoise**
 
@@ -72,9 +78,9 @@ pip install -r requirements_train.txt
 
 ### **3. Объединение аудиозаписей в датасете**
 
-**RNNoise для обучения требует 2 аудиозаписи: с чистой речью и с шумами.** Аудиозаписи должны быть в формате .raw, моно, 16 бит и 48000 Гц. То есть для обучения необходимо объединить аудиозаписи в датасете в 2 большие.
+**RNNoise для обучения требует 2 аудиозаписи: с чистой речью и с шумами.** Аудиозаписи должны быть в формате .raw, моно, 16 бит и 48000 Гц. То есть для обучения необходимо объединить все аудиозаписи в датасете в 2 большие.
 
-Объединить и подготовить все аудиозаписи с чистой речью и все аудиозаписи с шумами можно скриптом [`prepare_dataset_for_training.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/training_utils/prepare_dataset_for_training.py) (выполнять в `RNNoise_Wrapper`):
+Объединить и подготовить все аудиозаписи с чистой речью и все аудиозаписи с шумами можно скриптом [`training_utils/prepare_dataset_for_training.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/training_utils/prepare_dataset_for_training.py) (выполнять в `RNNoise_Wrapper`):
 
 ```bash
 python3 training_utils/prepare_dataset_for_training.py -cf datasets/test_training_set/clean -nf datasets/test_training_set/noise -bca datasets/test_training_set/all_clean.raw -bna datasets/test_training_set/all_noise.raw
@@ -116,7 +122,7 @@ python3 rnnoise-master/training/rnn_train_mod.py train_logs/test_training_set/tr
 
 ### **6. Конвертирование модели**
 
-RNNoise написан на С, поэтому полученную обученную tenosrflow **модель необходимо конвертировать в исходный код на С**.
+RNNoise написан на С, поэтому полученную обученную tenosrflow **модель необходимо конвертировать в код на С**.
 
 Исходный конвертер в репозитории с проектом приводит к ошибкам при попытке компиляции RNNoise с новой моделью. **Исправленный конвертер нужно скопировать** из [`training_utils/dump_rnn_mod.py`](https://github.com/Desklop/RNNoise_Wrapper/blob/master/training_utils/dump_rnn_mod.py) в `rnnoise-master/training`. Исправления основаны на [issue в исходном репозитории RNNoise](https://github.com/xiph/rnnoise/issues/74#issuecomment-517075991).
 
@@ -136,7 +142,7 @@ python3 rnnoise-master/training/dump_rnn_mod.py train_logs/test_training_set/wei
 cd rnnoise-master && make clean && ./autogen.sh && ./configure && make && cd -
 ```
 
-После успешной сборки, для удобства можно скопировать полученный бинарник в папку с обученной моделью и её весами:
+После успешной сборки, для удобства, можно скопировать полученный бинарник в папку с обученной моделью и её весами:
 
 ```bash
 cp rnnoise-master/.libs/librnnoise.so.0.4.1 train_logs/test_training_set/librnnoise_test_b_500k.so.0.4.1
@@ -154,7 +160,7 @@ cp rnnoise-master/.libs/librnnoise.so.0.4.1 train_logs/test_training_set/librnno
 
 1. Копирование папок вместе с содержимым: `cp -R source source_copy`
 2. Перемещение папок вместе с содержимым: `mv -v source_1 source_2 source_N all_source`
-3. Копирование 10 случайных файлов из текущей папки: `ls | shuf -n 10 | xargs -i cp {} /datasets/random_audio`
+3. Копирование 10 случайных файлов из текущей папки: `ls | shuf -n 10 | xargs -i cp {} ../random_audio`
 4. Подсчёт размера папки: `du -hs datasets/clean`
 5. Подсчёт количества файлов в текущей папке и всех её подпапках: `ls -laR | grep "^-" | wc`
 6. Архивировать папку в .zip: `zip -r test_training_set.zip datasets/test_training_set`
@@ -165,8 +171,8 @@ cp rnnoise-master/.libs/librnnoise.so.0.4.1 train_logs/test_training_set/librnno
 Документация и issues, на основе которых составлена данная инструкция:
 
 1. https://github.com/xiph/rnnoise/blob/master/TRAINING-README
-2. https://github.com/xiph/rnnoise/issues/1#issuecomment-467170166
-3. https://github.com/xiph/rnnoise/issues/8#issuecomment-346947946
+2. https://github.com/xiph/rnnoise/issues/8#issuecomment-346947946
+3. https://github.com/xiph/rnnoise/issues/1#issuecomment-467170166
 4. https://github.com/xiph/rnnoise/issues/74
 
 ---
