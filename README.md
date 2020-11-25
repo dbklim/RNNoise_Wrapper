@@ -14,13 +14,15 @@ RNNoise написан на C и имеет методы для шумопода
 - избавляет от необходимости вручную компилировать RNNoise (только для Linux)
 - добавляет 2 новых бинарных файла с более качественными моделями, которые поставляются вместе с пакетом (только для Linux)
 
-**RNNoise_Wrapper содержит 2 новых обученных модели** (обученные веса и скомпилированные бинарники RNNoise для Linux). Для обучения использовался датасет от [Microsoft DNS Challenge](https://github.com/microsoft/DNS-Challenge).
+**RNNoise_Wrapper содержит 2 новые более качественные модели** (обученные веса и скомпилированные бинарники RNNoise для Linux). Для обучения использовался датасет от [Microsoft DNS Challenge](https://github.com/microsoft/DNS-Challenge).
 
 1. **librnnoise_5h_ru_500k** — обучена на 5 часах русской речи (с подмешиванием эмоциональной речи и пения на английском языке), полученной скриптом из репозитория с датасетом. Обученные веса находятся в [`train_logs/weights_5h_ru_500k.hdf5`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/train_logs/weights_5h_ru_500k.hdf5), скомпилированный RNNoise в [`rnnoise_wrapper/libs/librnnoise_5h_ru_500k.so.0.4.1`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/rnnoise_wrapper/libs/librnnoise_5h_ru_500k.so.0.4.1) (только для Linux)
 
 2. **librnnoise_5h_b_500k** — обучена на 5 часах смешанной речи на английском, русском, немецком, французском, итальянском, испанском языках и мандаринского наречия китайского языка (с подмешиванием эмоциональной речи и пения на английском языке). Датасет для каждого языка предварительно был обрезан по самому наименьшему из них (меньше всего данных для русского языка, около 47 часов). Финальная обучающая выборка получена скриптом из репозитория с датасетом. Обученные веса находятся в [`train_logs/weights_5h_b_500k.hdf5`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/train_logs/weights_5h_b_500k.hdf5), скомпилированный RNNoise в [`rnnoise_wrapper/libs/librnnoise_5h_b_500k.so.0.4.1`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/rnnoise_wrapper/libs/librnnoise_5h_b_500k.so.0.4.1) (только для Linux)
 
 3. **librnnoise_default** — стандартная модель от авторов [RNNoise](https://jmvalin.ca/demo/rnnoise/)
+
+Модели `librnnoise_5h_ru_500k` и `librnnoise_5h_b_500k` имеют **практически одинаковое качество** шумоподавления. `librnnoise_5h_ru_500k` больше всего **подходит для работы с русской речью**, а `librnnoise_5h_b_500k` — **для смешанной речи** либо речи на не русском языке, она более универсальна.
 
 Сравнительные примеры работы новых моделей со стандартной доступны в [`test_audio/comparative_tests`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/test_audio/comparative_tests).
 

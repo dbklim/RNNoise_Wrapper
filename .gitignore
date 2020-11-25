@@ -11,7 +11,7 @@ test_audio/comparative_tests/test_*
 train_logs/training_set*
 rnnoise-master/
 DNS-Challenge-master*.zip
-train_logs*.zip
+*train_logs*.zip
 
 *.so*
 !rnnoise_wrapper/libs/*.so*
