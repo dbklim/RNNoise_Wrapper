@@ -133,6 +133,22 @@ rnnoise_wrapper -i input.wav -o output.wav
 - `input.wav` - имя исходной .wav аудиозаписи
 - `output.wav` - имя .wav аудиофайла, в который будет сохранена аудиозапись после шумоподавления
 
+## Docker
+The docker image can get an audio file, do the process on it and export the file.
+
+To build the dockerfile stand in the root of repo then:
+
+`docker build -f dockerize/Dockerfile -t rnnoisewrapper .`
+
+To run the container:
+
+`docker run -d -p 5000:5000 rnnoisewrapper:latest`
+
+and to test the api using curl you can insert this command:
+
+`curl -X POST -F "file=@/path/to/loca/sound/file.wav" 127.0.0.1:5000/process --output processed_audio.wav`
+
+
 ## Обучение
 
 Инструкция по обучению RNNoise на своих данных находится в [`TRAINING.md`](https://github.com/Desklop/RNNoise_Wrapper/tree/master/TRAINING.md).
