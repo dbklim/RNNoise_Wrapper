@@ -22,8 +22,8 @@ def read_audio(file):
 
     return audio
 
-@app.route('/denoise', methods=['POST'])
-def denoise():
+@app.route('/process', methods=['POST'])
+def process():
     global denoiser
 
     if 'file' not in request.files:
